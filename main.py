@@ -2,7 +2,6 @@ import random
 import pygame
 import math
 
-
 FPS = 60
 WIDTH = 500
 HEIGHT = 600
@@ -42,6 +41,10 @@ class Player(pygame.sprite.Sprite):
         if self.rect.bottom > HEIGHT:
             self.rect.bottom = HEIGHT
 
+    def shoot(self):
+        bullet = SelfBullet(self.rect.centerx, self.rect.top)
+        all_sprite.add(bullet)
+
 
 all_sprite = pygame.sprite.Group()
 player = Player()
@@ -78,8 +81,8 @@ class SelfBullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((10, 20))
-        self.image.fill(255, 0, 0)
-        self.rect = self.image.get.rect()
+        self.image.fill((255, 0, 0))
+        self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.bottom = y
         self.speedy = -10
@@ -92,7 +95,6 @@ class SelfBullet(pygame.sprite.Sprite):
 
 #game loop
 running = True
-
 
 while running:
     clock.tick(FPS)
