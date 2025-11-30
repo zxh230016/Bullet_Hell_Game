@@ -15,6 +15,8 @@ pygame.mixer.init()
 menu_bgm = "StartPageBGM.mp3"
 game_bgm = "GameBGM.mp3"
 
+select_sfx = pygame.mixer.Sound("Select.mp3")
+quit_sfx = pygame.mixer.Sound("Quit.mp3")
 
 def start_menu():
     play_music(menu_bgm)  # play menu music
@@ -33,13 +35,19 @@ def start_menu():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                pygame.mixer.music.stop()
+                quit_sfx.play()
+                pygame.time.delay(300)
                 pygame.quit()
                 exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_s:
+                    select_sfx.play()
                     menu_running = False  # exit menu
                     play_music(game_bgm)
                 elif event.key == pygame.K_q:
+                    quit_sfx.play()
+                    pygame.time.delay(250)
                     pygame.quit()
                     exit()
 
@@ -171,13 +179,18 @@ def game_over_screen():
     while waiting:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                quit_sfx.play()
+                pygame.time.delay(300)
                 pygame.quit()
                 exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
+                    select_sfx.play()
                     waiting = False
                     reset_game()
                 elif event.key == pygame.K_q:
+                    quit_sfx.play()
+                    pygame.time.delay(300)
                     pygame.quit()
                     exit()
         pygame.display.update()
@@ -204,6 +217,9 @@ while running:
     #get input
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            pygame.mixer.music.stop()
+            quit_sfx.play()
+            pygame.time.delay(300)
             running = False
     
     keys = pygame.key.get_pressed()
