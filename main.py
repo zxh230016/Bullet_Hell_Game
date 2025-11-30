@@ -10,11 +10,11 @@ HEIGHT = 600
 pygame.init()
 screen = pygame.display.set_mode((WIDTH,HEIGHT))
 clock = pygame.time.Clock()
-
+#bgm
 pygame.mixer.init()
 menu_bgm = "StartPageBGM.mp3"
 game_bgm = "GameBGM.mp3"
-
+#sfx
 select_sfx = pygame.mixer.Sound("Select.mp3")
 quit_sfx = pygame.mixer.Sound("Quit.mp3")
 
@@ -42,14 +42,32 @@ def start_menu():
                 exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_s:
-                    select_sfx.play()
+                    flash_text(screen, start_text, (WIDTH/2 - start_text.get_width()/2, HEIGHT/2), sfx=select_sfx)
                     menu_running = False  # exit menu
                     play_music(game_bgm)
                 elif event.key == pygame.K_q:
+                    flash_text(screen, start_text, (200, 200))
                     quit_sfx.play()
                     pygame.time.delay(250)
                     pygame.quit()
                     exit()
+
+def flash_text(surface, text_surf, pos, flashes=2, speed=150, bg_color=(0, 0, 0), sfx=None):
+    if sfx:
+        sfx.play()
+
+    rect = text_surf.get_rect(topleft=pos)
+
+    for i in range(flashes):
+        #hide text
+        surface.fill(bg_color, rect)
+        pygame.display.update(rect)
+        pygame.time.delay(speed)
+
+        #show text
+        surface.blit(text_surf, pos)
+        pygame.display.update(rect)
+        pygame.time.delay(speed)
 
 def play_music(bgm_file, loop=-1, volume=0.5, fadeout_ms=1000, fadein_ms=1000):
     if pygame.mixer.music.get_busy():
@@ -180,12 +198,12 @@ def game_over_screen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit_sfx.play()
-                pygame.time.delay(300)
+                pygame.time.delay(250)
                 pygame.quit()
                 exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
-                    select_sfx.play()
+                    flash_text(screen, retry_text, (WIDTH/2 - retry_text.get_width()/2, HEIGHT/2 + 20), sfx=select_sfx)
                     waiting = False
                     reset_game()
                 elif event.key == pygame.K_q:
