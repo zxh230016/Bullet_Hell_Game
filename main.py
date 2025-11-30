@@ -114,8 +114,8 @@ class Player(pygame.sprite.Sprite):
             self.rect.bottom = HEIGHT
 
         #collision check with enemy bullets
-        hits = pygame.sprite.spritecollide(self, bullets, True)
-        if hits:
+        hits = pygame.sprite.spritecollide(self, enemy_bullet, True)
+        if hits:       
             self.health -= 1
             if self.health <= 0:
                 game_over_screen()
@@ -128,7 +128,7 @@ class Player(pygame.sprite.Sprite):
             bullet1 = PlayerBullet(self.rect.centerx - 10, self.rect.top)
             bullet2 = PlayerBullet(self.rect.centerx + 10, self.rect.top)
             all_sprite.add(bullet1, bullet2)
-            bullets.add(bullet1, bullet2)
+            player_bullet.add(bullet1, bullet2)
 
 all_sprite = pygame.sprite.Group()
 player = Player()
@@ -147,7 +147,7 @@ class Enemy(pygame.sprite.Sprite):
         self.pause_time = 0
         self.pause_duration = 10000  # 10 seconds
         
-        self.health = 500
+        self.health = 50
 
     def get_new_target(self):
         return pygame.Vector2(random.randint(50, WIDTH-50), random.randint(50, HEIGHT//2))
@@ -160,7 +160,7 @@ class Enemy(pygame.sprite.Sprite):
         direction = pygame.math.Vector2(self.target_pos.x - self.rect.x, 
                                         self.target_pos.y - self.rect.y)
         distance = direction.length()
-        if distance < self.speed:
+        if distance == 0 or distance < self.speed:
             direction = direction.normalize()
             self.rect.center = self.target_pos
             self.pause_time = self.pause_duration
@@ -169,6 +169,13 @@ class Enemy(pygame.sprite.Sprite):
             direction = direction.normalize()
             self.rect.centerx += direction.x * self.speed
             self.rect.centery += direction.y * self.speed
+        
+        hits = pygame.sprite.spritecollide(self, player_bullet, True)
+        if hits:
+            self.health -= 1
+            if self.health <= 0:
+                game_clear_screen()
+
 
 enemy = Enemy()
 all_sprite.add(enemy)
@@ -199,8 +206,8 @@ class EnemyBullet(pygame.sprite.Sprite):
         if self.rect.top > HEIGHT or self.rect.left > WIDTH or self.rect.right < 0:
             self.kill()
 
-bullets = pygame.sprite.Group()
-all_sprite.add(bullets)
+enemy_bullet = pygame.sprite.Group()
+all_sprite.add(enemy_bullet)
 
 class PlayerBullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -216,6 +223,9 @@ class PlayerBullet(pygame.sprite.Sprite):
         self.rect.y += self.speedy
         if self.rect.bottom <0:
             self.kill()
+
+player_bullet = pygame.sprite.Group()
+all_sprite.add(player_bullet)
 
 def game_over_screen():
     screen.fill((0, 0, 0))
@@ -302,10 +312,10 @@ while running:
         player.shoot() #continuous shooting
 
     # randomly spawn bullets
-    if random.random() < 0.15:
+    if random.random() < 0.1:
         b = EnemyBullet()
         all_sprite.add(b)
-        bullets.add(b)   
+        enemy_bullet.add(b)   
     
     #update
     all_sprite.update()
