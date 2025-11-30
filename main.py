@@ -52,7 +52,7 @@ class Player(pygame.sprite.Sprite):
         if hits:
             self.health -= 1
             if self.health <= 0:
-                pygame.quit()
+                game_over_screen()
 
 
     def shoot(self):
@@ -110,6 +110,45 @@ class PlayerBullet(pygame.sprite.Sprite):
         if self.rect.bottom <0:
             self.kill()
 
+def game_over_screen():
+    screen.fill((0, 0, 0))
+    font_big = pygame.font.Font('ScienceGothic.ttf', 50)
+    font_small = pygame.font.Font('ScienceGothic.ttf', 30)
+
+    #display YOU DIED
+    text = font_big.render("YOU DIED", True, (255, 0, 0))
+    text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2 - 50))
+    screen.blit(text, text_rect)
+
+    #display options
+    retry_text = font_small.render("Press R to Try Again", True, (255, 255, 255))
+    quit_text = font_small.render("Press Q to Quit", True, (255, 255, 255))
+    screen.blit(retry_text, (WIDTH/2 - retry_text.get_width()/2, HEIGHT/2 + 20))
+    screen.blit(quit_text, (WIDTH/2 - quit_text.get_width()/2, HEIGHT/2 + 60))
+
+    #pause loop
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    waiting = False
+                    reset_game()
+                elif event.key == pygame.K_q:
+                    pygame.quit()
+                    exit()
+        pygame.display.update()
+
+def reset_game():
+    global all_sprite, player, bullets
+    all_sprite.empty()
+    bullets.empty()
+    
+    player = Player()
+    all_sprite.add(player)
 
 font = pygame.font.Font('ScienceGothic.ttf', 20)
 
