@@ -55,6 +55,7 @@ def start_menu():
 def flash_text(surface, text_surf, pos, flashes=2, speed=150, bg_color=(0, 0, 0), sfx=None):
     if sfx:
         sfx.play()
+        pygame.time.delay(250)
 
     rect = text_surf.get_rect(topleft=pos)
 
@@ -132,6 +133,47 @@ class Player(pygame.sprite.Sprite):
 all_sprite = pygame.sprite.Group()
 player = Player()
 all_sprite.add(player)
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.Surface((50, 50))
+        self.image.fill((255, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(50, WIDTH - 50)
+        self.rect.y = random.randint(50, HEIGHT//2)
+        self.speed = 5  
+        self.target_pos = self.get_new_target()
+        self.pause_time = 0
+        self.pause_duration = 10000  # 10 seconds
+        
+        self.health = 500
+
+    def get_new_target(self):
+        return pygame.Vector2(random.randint(50, WIDTH-50), random.randint(50, HEIGHT//2))
+    
+    def update(self):
+        if self.pause_time > 0:
+            self.pause_time -= clock.get_time()
+            return
+
+        direction = pygame.math.Vector2(self.target_pos.x - self.rect.x, 
+                                        self.target_pos.y - self.rect.y)
+        distance = direction.length()
+        if distance < self.speed:
+            direction = direction.normalize()
+            self.rect.center = self.target_pos
+            self.pause_time = self.pause_duration
+            self.target_pos = self.get_new_target()
+        else:
+            direction = direction.normalize()
+            self.rect.centerx += direction.x * self.speed
+            self.rect.centery += direction.y * self.speed
+
+enemy = Enemy()
+all_sprite.add(enemy)
+enemies = pygame.sprite.Group()
+enemies.add(enemy)
 
 class EnemyBullet(pygame.sprite.Sprite):
     def __init__(self):
@@ -214,13 +256,28 @@ def game_over_screen():
         pygame.display.update()
 
 def reset_game():
-    global all_sprite, player, bullets
+    global all_sprite, player, bullets, enemy, enemy_life
     all_sprite.empty()
     bullets.empty()
     
     player = Player()
     all_sprite.add(player)
+
+    enemy_life = 500
+    enemy = Enemy()  # assuming you have an Enemy class
+    all_sprite.add(enemy)
+
     play_music(game_bgm)
+
+def game_clear_screen():
+    screen.fill((0, 0, 0))
+    pygame.mixer.music.stop()
+    font_big = pygame.font.Font('ScienceGothic.ttf', 50)
+
+    #display YOU DIED
+    text = font_big.render("GAME CLEAR!", True, (0, 255, 0))
+    text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2 - 50))
+    screen.blit(text, text_rect)
 
 font = pygame.font.Font('ScienceGothic.ttf', 20)
 
