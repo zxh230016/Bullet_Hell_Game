@@ -1,5 +1,6 @@
 import random
 import pygame
+import math
 
 
 FPS = 60
@@ -46,6 +47,33 @@ all_sprite = pygame.sprite.Group()
 player = Player()
 all_sprite.add(player)
 
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.Surface((8, 8))
+        self.image.fill((255, 255, 255))
+        self.rect = self.image.get_rect()
+
+        self.rect.x = random.randint(0, WIDTH - self.rect.width)
+        self.rect.y = 0
+
+        # give random angle
+        angle = random.uniform(-60, 60)
+        speed = random.randint(3, 6)
+
+        # movement
+        self.speedx = speed * math.sin(math.radians(angle))
+        self.speedy = speed * math.cos(math.radians(angle))
+
+    def update(self):
+        self.rect.x += self.speedx
+        self.rect.y += self.speedy
+        if self.rect.top > HEIGHT or self.rect.left > WIDTH or self.rect.right < 0:
+            self.kill()
+
+bullets = pygame.sprite.Group()
+all_sprite.add(bullets)
+
 #game loop
 running = True
 
@@ -56,6 +84,12 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+    # randomly spawn bullets
+    if random.random() < 0.1:
+        b = Bullet()
+        all_sprite.add(b)
+        bullets.add(b)
+    
     #update
     all_sprite.update()
 
