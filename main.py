@@ -21,6 +21,8 @@ class Player(pygame.sprite.Sprite):
         self.rect.bottom = HEIGHT - 10
         self.speedx = 8
         self.speedy = 8
+        self.shoot_delay = 200   # milliseconds between bullets
+        self.last_shot = pygame.time.get_ticks()
 
     def update(self):
         key_pressed = pygame.key.get_pressed()
@@ -41,16 +43,22 @@ class Player(pygame.sprite.Sprite):
         if self.rect.bottom > HEIGHT:
             self.rect.bottom = HEIGHT
 
-    def shoot(self):
-        bullet = SelfBullet(self.rect.centerx, self.rect.top)
-        all_sprite.add(bullet)
 
+    def shoot(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_shot > self.shoot_delay:
+            self.last_shot = now
+            bullet1 = PlayerBullet(self.rect.centerx - 10, self.rect.top)
+            bullet2 = PlayerBullet(self.rect.centerx + 10, self.rect.top)
+            all_sprite.add(bullet1, bullet2)
+            bullets.add(bullet1, bullet2)
+  
 
 all_sprite = pygame.sprite.Group()
 player = Player()
 all_sprite.add(player)
 
-class Bullet(pygame.sprite.Sprite):
+class EnemyBullet(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.Surface((8, 8))
@@ -77,10 +85,10 @@ class Bullet(pygame.sprite.Sprite):
 bullets = pygame.sprite.Group()
 all_sprite.add(bullets)
 
-class SelfBullet(pygame.sprite.Sprite):
+class PlayerBullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((10, 20))
+        self.image = pygame.Surface((10, 25))
         self.image.fill((255, 0, 0))
         self.rect = self.image.get_rect()
         self.rect.centerx = x
@@ -102,15 +110,16 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                player.shoot()
+    
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_SPACE]:
+        player.shoot() #continuous shooting
 
     # randomly spawn bullets
     if random.random() < 0.15:
-        b = Bullet()
+        b = EnemyBullet()
         all_sprite.add(b)
-        bullets.add(b)
+        bullets.add(b)   
     
     #update
     all_sprite.update()
