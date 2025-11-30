@@ -21,6 +21,10 @@ class Player(pygame.sprite.Sprite):
         self.rect.bottom = HEIGHT - 10
         self.speedx = 8
         self.speedy = 8
+
+        #health
+        self.health = 5
+
         self.shoot_delay = 200   # milliseconds between bullets
         self.last_shot = pygame.time.get_ticks()
 
@@ -43,6 +47,13 @@ class Player(pygame.sprite.Sprite):
         if self.rect.bottom > HEIGHT:
             self.rect.bottom = HEIGHT
 
+        #collision check with enemy bullets
+        hits = pygame.sprite.spritecollide(self, bullets, True)
+        if hits:
+            self.health -= 1
+            if self.health <= 0:
+                pygame.quit()
+
 
     def shoot(self):
         now = pygame.time.get_ticks()
@@ -52,7 +63,6 @@ class Player(pygame.sprite.Sprite):
             bullet2 = PlayerBullet(self.rect.centerx + 10, self.rect.top)
             all_sprite.add(bullet1, bullet2)
             bullets.add(bullet1, bullet2)
-  
 
 all_sprite = pygame.sprite.Group()
 player = Player()
@@ -101,6 +111,8 @@ class PlayerBullet(pygame.sprite.Sprite):
             self.kill()
 
 
+font = pygame.font.Font('ScienceGothic.ttf', 20)
+
 #game loop
 running = True
 
@@ -127,6 +139,10 @@ while running:
     #display
     screen.fill((0, 0, 0))
     all_sprite.draw(screen)
+    health_text = font.render(f'Life: {player.health}', True, (255, 255, 255))
+    screen.blit(health_text, (WIDTH - 80, 10))
+
     pygame.display.update()
+
 
 pygame.QUIT
