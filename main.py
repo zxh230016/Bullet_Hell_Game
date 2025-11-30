@@ -15,7 +15,7 @@ clock = pygame.time.Clock()
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((50, 40))
+        self.image = pygame.Surface((40, 40))
         self.image.fill((0, 255, 0))
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH/2
@@ -74,6 +74,22 @@ class Bullet(pygame.sprite.Sprite):
 bullets = pygame.sprite.Group()
 all_sprite.add(bullets)
 
+class SelfBullet(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((10, 20))
+        self.image.fill(255, 0, 0)
+        self.rect = self.image.get.rect()
+        self.rect.centerx = x
+        self.rect.bottom = y
+        self.speedy = -10
+
+    def update(self):
+        self.rect.y += self.speedy
+        if self.rect.bottom <0:
+            self.kill()
+
+
 #game loop
 running = True
 
@@ -84,8 +100,12 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player.shoot()
+
     # randomly spawn bullets
-    if random.random() < 0.1:
+    if random.random() < 0.15:
         b = Bullet()
         all_sprite.add(b)
         bullets.add(b)
