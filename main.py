@@ -11,6 +11,45 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH,HEIGHT))
 clock = pygame.time.Clock()
 
+pygame.mixer.init()
+menu_bgm = "StartPageBGM.mp3"
+game_bgm = "GameBGM.mp3"
+
+
+def start_menu():
+    play_music(menu_bgm)  # play menu music
+    menu_running = True
+    font = pygame.font.Font('ScienceGothic.ttf', 40)
+
+    while menu_running:
+        screen.fill((0, 0, 0))
+        start_text = font.render("Press S to Start", True, (0, 255, 0))
+        quit_text = font.render("Press Q to Quit", True, (255, 0, 0))
+
+        screen.blit(start_text, (WIDTH/2 - start_text.get_width()/2, HEIGHT/2))
+        screen.blit(quit_text, (WIDTH/2 - quit_text.get_width()/2, HEIGHT/2 + 60))
+
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_s:
+                    menu_running = False  # exit menu
+                    play_music(game_bgm)
+                elif event.key == pygame.K_q:
+                    pygame.quit()
+                    exit()
+
+def play_music(bgm_file, loop=-1, volume=0.5, fadeout_ms=1000, fadein_ms=1000):
+    if pygame.mixer.music.get_busy():
+        pygame.mixer.music.fadeout(fadeout_ms)
+    pygame.mixer.music.load(bgm_file)
+    pygame.mixer.music.set_volume(volume)
+    pygame.mixer.music.play(loops=loop, fade_ms=fadein_ms)
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -112,6 +151,7 @@ class PlayerBullet(pygame.sprite.Sprite):
 
 def game_over_screen():
     screen.fill((0, 0, 0))
+    pygame.mixer.music.stop()
     font_big = pygame.font.Font('ScienceGothic.ttf', 50)
     font_small = pygame.font.Font('ScienceGothic.ttf', 30)
 
@@ -149,8 +189,12 @@ def reset_game():
     
     player = Player()
     all_sprite.add(player)
+    play_music(game_bgm)
 
 font = pygame.font.Font('ScienceGothic.ttf', 20)
+
+#display menu
+start_menu()
 
 #game loop
 running = True
