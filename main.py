@@ -130,9 +130,27 @@ class Player(pygame.sprite.Sprite):
             all_sprite.add(bullet1, bullet2)
             player_bullet.add(bullet1, bullet2)
 
+class PlayerBullet(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((10, 25))
+        self.image.fill((255, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.bottom = y
+        self.speedy = -10
+
+    def update(self):
+        self.rect.y += self.speedy
+        if self.rect.bottom <0:
+            self.kill()
+
+
 all_sprite = pygame.sprite.Group()
 player = Player()
 all_sprite.add(player)
+player_bullet = pygame.sprite.Group()
+
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
@@ -140,47 +158,42 @@ class Enemy(pygame.sprite.Sprite):
         self.image = pygame.Surface((50, 50))
         self.image.fill((255, 0, 0))
         self.rect = self.image.get_rect()
-        self.rect.x = random.randint(50, WIDTH - 50)
-        self.rect.y = random.randint(50, HEIGHT//2)
-        self.speed = 5  
+        self.rect.center = (random.randint(50, WIDTH-50), random.randint(50, HEIGHT//2))
+        self.speed = 3
         self.target_pos = self.get_new_target()
         self.pause_time = 0
         self.pause_duration = 10000  # 10 seconds
-        
         self.health = 50
 
     def get_new_target(self):
         return pygame.Vector2(random.randint(50, WIDTH-50), random.randint(50, HEIGHT//2))
     
     def update(self):
-        if self.pause_time > 0:
-            self.pause_time -= clock.get_time()
-            return
+        global player_bullet
 
-        direction = pygame.math.Vector2(self.target_pos.x - self.rect.x, 
-                                        self.target_pos.y - self.rect.y)
+        direction = pygame.Vector2(self.target_pos.x - self.rect.centerx,
+                                   self.target_pos.y - self.rect.centery)
+
         distance = direction.length()
+
         if distance == 0 or distance < self.speed:
-            direction = direction.normalize()
-            self.rect.center = self.target_pos
+            self.rect.center = (int(self.target_pos.x), int(self.target_pos.y))
             self.pause_time = self.pause_duration
             self.target_pos = self.get_new_target()
         else:
-            direction = direction.normalize()
-            self.rect.centerx += direction.x * self.speed
-            self.rect.centery += direction.y * self.speed
+            move_vector = direction.normalize() * self.speed
+            self.rect.x += move_vector.x
+            self.rect.y += move_vector.y
         
         hits = pygame.sprite.spritecollide(self, player_bullet, True)
-        if hits:
+        for bullet in hits:
+            bullet.kill()
             self.health -= 1
             if self.health <= 0:
                 game_clear_screen()
 
-
 enemy = Enemy()
 all_sprite.add(enemy)
-enemies = pygame.sprite.Group()
-enemies.add(enemy)
 
 class EnemyBullet(pygame.sprite.Sprite):
     def __init__(self):
@@ -207,25 +220,7 @@ class EnemyBullet(pygame.sprite.Sprite):
             self.kill()
 
 enemy_bullet = pygame.sprite.Group()
-all_sprite.add(enemy_bullet)
 
-class PlayerBullet(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((10, 25))
-        self.image.fill((255, 0, 0))
-        self.rect = self.image.get_rect()
-        self.rect.centerx = x
-        self.rect.bottom = y
-        self.speedy = -10
-
-    def update(self):
-        self.rect.y += self.speedy
-        if self.rect.bottom <0:
-            self.kill()
-
-player_bullet = pygame.sprite.Group()
-all_sprite.add(player_bullet)
 
 def game_over_screen():
     screen.fill((0, 0, 0))
@@ -266,9 +261,10 @@ def game_over_screen():
         pygame.display.update()
 
 def reset_game():
-    global all_sprite, player, bullets, enemy, enemy_life
+    global all_sprite, player, player_bullet, enemy_bullet, enemy, enemy_life
+    game_cleared = False
     all_sprite.empty()
-    bullets.empty()
+    player_bullet.empty()
     
     player = Player()
     all_sprite.add(player)
@@ -280,14 +276,46 @@ def reset_game():
     play_music(game_bgm)
 
 def game_clear_screen():
-    screen.fill((0, 0, 0))
+    global game_cleared
+    game_cleared = True
     pygame.mixer.music.stop()
-    font_big = pygame.font.Font('ScienceGothic.ttf', 50)
 
-    #display YOU DIED
+    screen.fill((0, 0, 0))
+    font_big = pygame.font.Font('ScienceGothic.ttf', 50)
+    font_small = pygame.font.Font('ScienceGothic.ttf', 30)
+
+    #display GAME CLEAR!
     text = font_big.render("GAME CLEAR!", True, (0, 255, 0))
     text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2 - 50))
     screen.blit(text, text_rect)
+
+    #display option
+    retry_text = font_small.render("Press R to Try Again", True, (255, 255, 255))
+    quit_text = font_small.render("Press Q to Quit", True, (255, 255, 255))
+    screen.blit(retry_text, (WIDTH/2 - retry_text.get_width()/2, HEIGHT/2 + 20))
+    screen.blit(quit_text, (WIDTH/2 - quit_text.get_width()/2, HEIGHT/2 + 60))
+
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quit_sfx.play()
+                pygame.time.delay(250)
+                pygame.quit()
+                exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    flash_text(screen, retry_text, (WIDTH/2 - retry_text.get_width()/2, HEIGHT/2 + 20), sfx=select_sfx)
+                    waiting = False
+                    reset_game()
+                elif event.key == pygame.K_q:
+                    quit_sfx.play()
+                    pygame.time.delay(300)
+                    pygame.quit()
+                    exit()
+
+        pygame.display.update()
+
 
 font = pygame.font.Font('ScienceGothic.ttf', 20)
 
@@ -296,6 +324,7 @@ start_menu()
 
 #game loop
 running = True
+game_cleared = False
 
 while running:
     clock.tick(FPS)
@@ -306,6 +335,9 @@ while running:
             quit_sfx.play()
             pygame.time.delay(300)
             running = False
+    if game_cleared:
+        game_clear_screen()
+        continue
     
     keys = pygame.key.get_pressed()
     if keys[pygame.K_SPACE]:
