@@ -167,7 +167,7 @@ class Enemy(pygame.sprite.Sprite):
         self.target_pos = self.get_new_target()
         self.pause_time = 0
         self.pause_duration = 10000  # 10 seconds
-        self.health = 50
+        self.health = 200
 
     def get_new_target(self):
         return pygame.Vector2(
@@ -368,6 +368,5 @@ while running:
     screen.blit(health_text, (WIDTH - 80, 10))
 
     pygame.display.update()
-
 
 pygame.QUIT
