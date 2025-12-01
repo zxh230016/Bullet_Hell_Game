@@ -158,7 +158,11 @@ class Enemy(pygame.sprite.Sprite):
         self.image = pygame.Surface((50, 50))
         self.image.fill((255, 0, 0))
         self.rect = self.image.get_rect()
-        self.rect.center = (random.randint(50, WIDTH-50), random.randint(50, HEIGHT//2))
+        self.rect.center = (
+            random.randint(50, WIDTH - 50),
+            random.randint(50, HEIGHT // 2)
+        )
+
         self.speed = 3
         self.target_pos = self.get_new_target()
         self.pause_time = 0
@@ -166,29 +170,37 @@ class Enemy(pygame.sprite.Sprite):
         self.health = 50
 
     def get_new_target(self):
-        return pygame.Vector2(random.randint(50, WIDTH-50), random.randint(50, HEIGHT//2))
-    
+        return pygame.Vector2(
+            random.randint(50, WIDTH - 50),
+            random.randint(50, HEIGHT // 2)
+        )
+
     def update(self):
         global player_bullet
 
-        direction = pygame.Vector2(self.target_pos.x - self.rect.centerx,
-                                   self.target_pos.y - self.rect.centery)
+        # Convert rect.center to Vector2 for calculations
+        enemy_pos = pygame.Vector2(self.rect.center)
 
-        distance = direction.length()
+        # --- Movement ---
+        if self.pause_time <= 0:
+            direction = self.target_pos - enemy_pos
+            distance = direction.length()
 
-        if distance == 0 or distance < self.speed:
-            self.rect.center = (int(self.target_pos.x), int(self.target_pos.y))
-            self.pause_time = self.pause_duration
-            self.target_pos = self.get_new_target()
+            if distance < self.speed:
+                self.rect.center = (int(self.target_pos.x), int(self.target_pos.y))
+                self.pause_time = self.pause_duration
+                self.target_pos = self.get_new_target()
+            else:
+                move_vector = direction.normalize() * self.speed
+                self.rect.centerx += move_vector.x
+                self.rect.centery += move_vector.y
         else:
-            move_vector = direction.normalize() * self.speed
-            self.rect.x += move_vector.x
-            self.rect.y += move_vector.y
-        
+            self.pause_time -= clock.get_time()
+
+        # --- Collision check (always check, even during pause) ---
         hits = pygame.sprite.spritecollide(self, player_bullet, True)
-        for bullet in hits:
-            bullet.kill()
-            self.health -= 1
+        if hits:
+            self.health -= len(hits)
             if self.health <= 0:
                 game_clear_screen()
 
@@ -261,7 +273,7 @@ def game_over_screen():
         pygame.display.update()
 
 def reset_game():
-    global all_sprite, player, player_bullet, enemy_bullet, enemy, enemy_life
+    global all_sprite, player, player_bullet, enemy_bullet, enemy, enemy_life, game_cleared
     game_cleared = False
     all_sprite.empty()
     player_bullet.empty()
@@ -335,9 +347,6 @@ while running:
             quit_sfx.play()
             pygame.time.delay(300)
             running = False
-    if game_cleared:
-        game_clear_screen()
-        continue
     
     keys = pygame.key.get_pressed()
     if keys[pygame.K_SPACE]:
