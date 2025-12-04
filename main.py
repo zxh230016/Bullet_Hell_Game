@@ -77,6 +77,8 @@ def play_music(bgm_file, loop=-1, volume=0.5, fadeout_ms=1000, fadein_ms=1000):
     pygame.mixer.music.set_volume(volume)
     pygame.mixer.music.play(loops=loop, fade_ms=fadein_ms)
 
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -115,7 +117,7 @@ class Player(pygame.sprite.Sprite):
 
         #collision check with enemy bullets
         hits = pygame.sprite.spritecollide(self, enemy_bullet, True)
-        if hits:       
+        if hits:
             self.health -= 1
             if self.health <= 0:
                 game_over_screen()
@@ -177,6 +179,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def update(self):
         global player_bullet
+        global score
 
         # Convert rect.center to Vector2 for calculations
         enemy_pos = pygame.Vector2(self.rect.center)
@@ -200,6 +203,7 @@ class Enemy(pygame.sprite.Sprite):
         # --- Collision check (always check, even during pause) ---
         hits = pygame.sprite.spritecollide(self, player_bullet, True)
         if hits:
+            score += 1
             self.health -= len(hits)
             if self.health <= 0:
                 game_clear_screen()
@@ -273,8 +277,9 @@ def game_over_screen():
         pygame.display.update()
 
 def reset_game():
-    global all_sprite, player, player_bullet, enemy_bullet, enemy, enemy_life, game_cleared
+    global all_sprite, player, player_bullet, enemy_bullet, enemy, enemy_life, game_cleared, score
     game_cleared = False
+    score = 0
     all_sprite.empty()
     player_bullet.empty()
     
@@ -282,7 +287,7 @@ def reset_game():
     all_sprite.add(player)
 
     enemy_life = 500
-    enemy = Enemy()  # assuming you have an Enemy class
+    enemy = Enemy()
     all_sprite.add(enemy)
 
     play_music(game_bgm)
@@ -330,6 +335,7 @@ def game_clear_screen():
 
 
 font = pygame.font.Font('ScienceGothic.ttf', 20)
+score = 0
 
 #display menu
 start_menu()
@@ -365,7 +371,9 @@ while running:
     screen.fill((0, 0, 0))
     all_sprite.draw(screen)
     health_text = font.render(f'Life: {player.health}', True, (255, 255, 255))
-    screen.blit(health_text, (WIDTH - 80, 10))
+    score_text = font.render(f'Score:{score}', True, (255, 255, 255))
+    screen.blit(health_text, (WIDTH - 120, 10))
+    screen.blit(score_text, (WIDTH - 120, 30))
 
     pygame.display.update()
 
