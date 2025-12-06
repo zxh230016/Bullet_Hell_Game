@@ -82,18 +82,18 @@ def play_music(bgm_file, loop=-1, volume=0.5, fadeout_ms=1000, fadein_ms=1000):
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((40, 40))
+        self.image = pygame.Surface((20, 20))
         self.image.fill((0, 255, 0))
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH/2
         self.rect.bottom = HEIGHT - 10
-        self.speedx = 8
-        self.speedy = 8
+        self.speedx = 4
+        self.speedy = 4
 
         #health
         self.health = 5
 
-        self.shoot_delay = 200   # milliseconds between bullets
+        self.shoot_delay = 150   # milliseconds between bullets
         self.last_shot = pygame.time.get_ticks()
 
     def update(self):
@@ -135,7 +135,7 @@ class Player(pygame.sprite.Sprite):
 class PlayerBullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((10, 25))
+        self.image = pygame.Surface((8, 15))
         self.image.fill((255, 0, 0))
         self.rect = self.image.get_rect()
         self.rect.centerx = x
@@ -153,63 +153,57 @@ player = Player()
 all_sprite.add(player)
 player_bullet = pygame.sprite.Group()
 
+class Dannmaku:
+    def __init__(self, enemy, bullet_group, all_sprites):
+        self.enemy = enemy
+        self.bullet_group = bullet_group
+        self.all_sprites = all_sprites
 
-class Enemy(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.image = pygame.Surface((50, 50))
-        self.image.fill((255, 0, 0))
-        self.rect = self.image.get_rect()
-        self.rect.center = (
-            random.randint(50, WIDTH - 50),
-            random.randint(50, HEIGHT // 2)
-        )
-
-        self.speed = 3
-        self.target_pos = self.get_new_target()
-        self.pause_time = 0
-        self.pause_duration = 10000  # 10 seconds
-        self.health = 200
-
-    def get_new_target(self):
-        return pygame.Vector2(
-            random.randint(50, WIDTH - 50),
-            random.randint(50, HEIGHT // 2)
-        )
+        self.angle = 0
+        self.spin_speed = 0.03
+        self.bullet_speed = 2
+        self.bullet_count = 16
+        self.shoot_delay = 6
+        self.timer = 0
 
     def update(self):
-        global player_bullet
-        global score
+        self.angle += self.spin_speed  
+        if self.angle >= 2 * math.pi:
+            self.angle -= 2 * math.pi
 
-        # Convert rect.center to Vector2 for calculations
-        enemy_pos = pygame.Vector2(self.rect.center)
+        self.timer += 1
+        if self.timer >= self.shoot_delay:
+            self.timer = 0
+            cx, cy = self.enemy.rect.center
 
-        # --- Movement ---
-        if self.pause_time <= 0:
-            direction = self.target_pos - enemy_pos
-            distance = direction.length()
+            for i in range(self.bullet_count):
+                bullet_angle = self.angle + (i * (2 * math.pi / self.bullet_count))
+                bullet = DannmakuBullet(self.enemy, bullet_angle, radius_speed=self.bullet_speed)
+                self.bullet_group.add(bullet)
+                self.all_sprites.add(bullet)
 
-            if distance < self.speed:
-                self.rect.center = (int(self.target_pos.x), int(self.target_pos.y))
-                self.pause_time = self.pause_duration
-                self.target_pos = self.get_new_target()
-            else:
-                move_vector = direction.normalize() * self.speed
-                self.rect.centerx += move_vector.x
-                self.rect.centery += move_vector.y
-        else:
-            self.pause_time -= clock.get_time()
+class DannmakuBullet(pygame.sprite.Sprite):
+    def __init__(self, enemy, angle, radius_speed=0.3):
+        super().__init__()
+        self.enemy = enemy
+        self.angle = angle
+        self.radius = 0
+        self.radius_speed = radius_speed
 
-        # --- Collision check (always check, even during pause) ---
-        hits = pygame.sprite.spritecollide(self, player_bullet, True)
-        if hits:
-            score += 1
-            self.health -= len(hits)
-            if self.health <= 0:
-                game_clear_screen()
+        self.image = pygame.Surface((8, 8), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, (255, 255, 0), (4, 4), 4)
+        self.rect = self.image.get_rect()
 
-enemy = Enemy()
-all_sprite.add(enemy)
+    def update(self):
+        self.radius += self.radius_speed
+        
+        self.rect.centerx = self.enemy.rect.centerx + math.cos(self.angle) * self.radius
+        self.rect.centery = self.enemy.rect.centery + math.sin(self.angle) * self.radius
+
+        # remove bullets far off-screen
+        if (self.rect.x < -50 or self.rect.x > 850 or 
+            self.rect.y < -50 or self.rect.y > 650):
+            self.kill()
 
 class EnemyBullet(pygame.sprite.Sprite):
     def __init__(self):
@@ -237,6 +231,66 @@ class EnemyBullet(pygame.sprite.Sprite):
 
 enemy_bullet = pygame.sprite.Group()
 
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.Surface((50, 50))
+        self.image.fill((255, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.center = (
+            random.randint(50, WIDTH - 50),
+            random.randint(50, HEIGHT // 2)
+        )
+
+        self.speed = 3
+        self.target_pos = self.get_new_target()
+        self.pause_time = 0
+        self.pause_duration = 10000  # 10 seconds
+        self.health = 200
+
+        self.danmaku = Dannmaku(self, enemy_bullet, all_sprite)
+
+    def get_new_target(self):
+        return pygame.Vector2(
+            random.randint(50, WIDTH - 50),
+            random.randint(50, HEIGHT // 2)
+        )
+
+    def update(self):
+        global player_bullet
+        global score
+
+        # Convert rect.center to Vector2 for calculations
+        enemy_pos = pygame.Vector2(self.rect.center)
+
+        #Movement
+        if self.pause_time <= 0:
+            direction = self.target_pos - enemy_pos
+            distance = direction.length()
+
+            if distance < self.speed:
+                self.rect.center = (int(self.target_pos.x), int(self.target_pos.y))
+                self.pause_time = self.pause_duration
+                self.target_pos = self.get_new_target()
+            else:
+                move_vector = direction.normalize() * self.speed
+                self.rect.centerx += move_vector.x
+                self.rect.centery += move_vector.y
+        else:
+            self.pause_time -= clock.get_time()
+
+        #Collision check
+        hits = pygame.sprite.spritecollide(self, player_bullet, True)
+        if hits:
+            score += 1
+            self.health -= len(hits)
+            if self.health <= 0:
+                game_clear_screen()
+
+        self.danmaku.update()
+
+enemy = Enemy()
+all_sprite.add(enemy)
 
 def game_over_screen():
     screen.fill((0, 0, 0))
@@ -282,6 +336,7 @@ def reset_game():
     score = 0
     all_sprite.empty()
     player_bullet.empty()
+    enemy_bullet.empty()
     
     player = Player()
     all_sprite.add(player)
