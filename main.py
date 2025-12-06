@@ -17,6 +17,11 @@ game_bgm = "GameBGM.mp3"
 #sfx
 select_sfx = pygame.mixer.Sound("Select.mp3")
 quit_sfx = pygame.mixer.Sound("Quit.mp3")
+#bullet image
+IMG_DANNMAKU = pygame.image.load("red_bullet.png").convert_alpha()
+IMG_DANNMAKU = pygame.transform.scale(IMG_DANNMAKU, (16, 16))
+IMG_ENEMY_BULLET = pygame.image.load("blue_bullet.png").convert_alpha()
+IMG_ENEMY_BULLET = pygame.transform.scale(IMG_ENEMY_BULLET, (16, 16))
 
 def start_menu():
     play_music(menu_bgm)  # play menu music
@@ -78,7 +83,6 @@ def play_music(bgm_file, loop=-1, volume=0.5, fadeout_ms=1000, fadein_ms=1000):
     pygame.mixer.music.play(loops=loop, fade_ms=fadein_ms)
 
 
-
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -93,7 +97,7 @@ class Player(pygame.sprite.Sprite):
         #health
         self.health = 5
 
-        self.shoot_delay = 150   # milliseconds between bullets
+        self.shoot_delay = 200   # milliseconds between bullets
         self.last_shot = pygame.time.get_ticks()
 
     def update(self):
@@ -135,7 +139,7 @@ class Player(pygame.sprite.Sprite):
 class PlayerBullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((8, 15))
+        self.image = pygame.Surface((6, 15))
         self.image.fill((255, 0, 0))
         self.rect = self.image.get_rect()
         self.rect.centerx = x
@@ -146,7 +150,6 @@ class PlayerBullet(pygame.sprite.Sprite):
         self.rect.y += self.speedy
         if self.rect.bottom <0:
             self.kill()
-
 
 all_sprite = pygame.sprite.Group()
 player = Player()
@@ -178,27 +181,28 @@ class Dannmaku:
 
             for i in range(self.bullet_count):
                 bullet_angle = self.angle + (i * (2 * math.pi / self.bullet_count))
-                bullet = DannmakuBullet(self.enemy, bullet_angle, radius_speed=self.bullet_speed)
+                bullet = DannmakuBullet(start_x=cx, start_y=cy, angle=bullet_angle, radius_speed=1.5, spread_scale=2.5)
                 self.bullet_group.add(bullet)
                 self.all_sprites.add(bullet)
 
 class DannmakuBullet(pygame.sprite.Sprite):
-    def __init__(self, enemy, angle, radius_speed=0.3):
+    def __init__(self, start_x, start_y, angle, radius_speed=1.5, spread_scale=2.5):
         super().__init__()
-        self.enemy = enemy
+        self.start_x = start_x
+        self.start_y = start_y
         self.angle = angle
-        self.radius = 0
+        self.radius = 8
         self.radius_speed = radius_speed
+        self.spread_scale = spread_scale
 
-        self.image = pygame.Surface((8, 8), pygame.SRCALPHA)
-        pygame.draw.circle(self.image, (255, 255, 0), (4, 4), 4)
+        self.image = IMG_DANNMAKU
         self.rect = self.image.get_rect()
 
     def update(self):
         self.radius += self.radius_speed
-        
-        self.rect.centerx = self.enemy.rect.centerx + math.cos(self.angle) * self.radius
-        self.rect.centery = self.enemy.rect.centery + math.sin(self.angle) * self.radius
+        offset = self.radius * self.spread_scale
+        self.rect.centerx = self.start_x + math.cos(self.angle) * offset
+        self.rect.centery = self.start_y + math.sin(self.angle) * offset
 
         # remove bullets far off-screen
         if (self.rect.x < -50 or self.rect.x > 850 or 
@@ -208,8 +212,7 @@ class DannmakuBullet(pygame.sprite.Sprite):
 class EnemyBullet(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.Surface((8, 8))
-        self.image.fill((255, 255, 255))
+        self.image = IMG_ENEMY_BULLET
         self.rect = self.image.get_rect()
 
         self.rect.x = random.randint(0, WIDTH - self.rect.width)
