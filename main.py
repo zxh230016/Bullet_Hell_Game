@@ -186,7 +186,7 @@ class Dannmaku:
         self.spin_speed = 0.03
         self.bullet_speed = 2
         self.bullet_count = 16
-        self.shoot_delay = 6
+        self.shoot_delay = 10
         self.timer = 0
 
     def update(self):
@@ -269,7 +269,7 @@ class Enemy(pygame.sprite.Sprite):
         self.target_pos = self.get_new_target()
         self.pause_time = 0
         self.pause_duration = 10000  # 10 seconds
-        self.health = 200
+        self.health = 99
 
         self.danmaku = Dannmaku(self, enemy_bullet, all_sprite)
 
