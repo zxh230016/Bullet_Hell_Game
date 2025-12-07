@@ -22,7 +22,7 @@ player_hitted_sfx = pygame.mixer.Sound("player_hitted.mp3")
 IMG_DANNMAKU = pygame.image.load("red_bullet.png").convert_alpha()
 IMG_DANNMAKU = pygame.transform.scale(IMG_DANNMAKU, (16, 16))
 IMG_ENEMY_BULLET = pygame.image.load("blue_bullet.png").convert_alpha()
-IMG_ENEMY_BULLET = pygame.transform.scale(IMG_ENEMY_BULLET, (20, 20))
+IMG_ENEMY_BULLET = pygame.transform.scale(IMG_ENEMY_BULLET, (25, 25))
 IMG_PLAYER_BULLET = pygame.image.load("player_bullet.png").convert_alpha()
 IMG_PLAYER_BULLET = pygame.transform.scale(IMG_PLAYER_BULLET, (40, 40))
 
@@ -287,7 +287,7 @@ class Enemy(pygame.sprite.Sprite):
         self.target_pos = self.get_new_target()
         self.pause_time = 0
         self.pause_duration = 8000  # 10 seconds
-        self.health = 199
+        self.health = 150
 
         self.danmaku = Dannmaku(self, enemy_bullet, all_sprite)
 
