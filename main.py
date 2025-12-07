@@ -105,8 +105,13 @@ class Player(pygame.sprite.Sprite):
         self.flash_duration = 10
         self.flash_count = 0
         self.flash_max = 2
+        self.invuln = 0
+        self.invuln_duration = 60 #1s
 
     def update(self):
+        if self.invuln > 0:
+            self.invuln -= 1
+            
         key_pressed = pygame.key.get_pressed()
         if key_pressed[pygame.K_d]:
             self.rect.x += self.speedx
@@ -138,11 +143,14 @@ class Player(pygame.sprite.Sprite):
             self.image.fill((0, 255, 0))
 
         #collision check with enemy bullets
-        hits = pygame.sprite.spritecollide(self, enemy_bullet, True)
-        if hits:
-            player_hitted_sfx.play()
-            self.flash_timer = self.flash_duration
-            self.health -= 1
+        if self.invuln == 0:
+            hits = pygame.sprite.spritecollide(self, enemy_bullet, True)
+            if hits:
+                player_hitted_sfx.play()
+                self.flash_timer = self.flash_duration
+                self.health -= 1
+                self.invuln = self.invuln_duration
+
             if self.health <= 0:
                 game_over_screen()
 
