@@ -17,11 +17,12 @@ game_bgm = "GameBGM.mp3"
 #sfx
 select_sfx = pygame.mixer.Sound("Select.mp3")
 quit_sfx = pygame.mixer.Sound("Quit.mp3")
+player_hitted_sfx = pygame.mixer.Sound("player_hitted.mp3")
 #bullet image
 IMG_DANNMAKU = pygame.image.load("red_bullet.png").convert_alpha()
 IMG_DANNMAKU = pygame.transform.scale(IMG_DANNMAKU, (16, 16))
 IMG_ENEMY_BULLET = pygame.image.load("blue_bullet.png").convert_alpha()
-IMG_ENEMY_BULLET = pygame.transform.scale(IMG_ENEMY_BULLET, (16, 16))
+IMG_ENEMY_BULLET = pygame.transform.scale(IMG_ENEMY_BULLET, (20, 20))
 
 def start_menu():
     play_music(menu_bgm)  # play menu music
@@ -122,6 +123,7 @@ class Player(pygame.sprite.Sprite):
         #collision check with enemy bullets
         hits = pygame.sprite.spritecollide(self, enemy_bullet, True)
         if hits:
+            player_hitted_sfx.play()
             self.health -= 1
             if self.health <= 0:
                 game_over_screen()
@@ -181,12 +183,12 @@ class Dannmaku:
 
             for i in range(self.bullet_count):
                 bullet_angle = self.angle + (i * (2 * math.pi / self.bullet_count))
-                bullet = DannmakuBullet(start_x=cx, start_y=cy, angle=bullet_angle, radius_speed=1.5, spread_scale=2.5)
+                bullet = DannmakuBullet(start_x=cx, start_y=cy, angle=bullet_angle, radius_speed=0.3, spread_scale=5)
                 self.bullet_group.add(bullet)
                 self.all_sprites.add(bullet)
 
 class DannmakuBullet(pygame.sprite.Sprite):
-    def __init__(self, start_x, start_y, angle, radius_speed=1.5, spread_scale=2.5):
+    def __init__(self, start_x, start_y, angle, radius_speed=0.3, spread_scale=5):
         super().__init__()
         self.start_x = start_x
         self.start_y = start_y
@@ -242,7 +244,7 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (
             random.randint(50, WIDTH - 50),
-            random.randint(50, HEIGHT // 2)
+            random.randint(50, HEIGHT // 3)
         )
 
         self.speed = 3
@@ -263,7 +265,6 @@ class Enemy(pygame.sprite.Sprite):
         global player_bullet
         global score
 
-        # Convert rect.center to Vector2 for calculations
         enemy_pos = pygame.Vector2(self.rect.center)
 
         #Movement
@@ -286,7 +287,7 @@ class Enemy(pygame.sprite.Sprite):
         hits = pygame.sprite.spritecollide(self, player_bullet, True)
         if hits:
             score += 1
-            self.health -= len(hits)
+            self.health -= 2
             if self.health <= 0:
                 game_clear_screen()
 
