@@ -4,5 +4,6 @@ BGM Credit:
 https://www.FesliyanStudios.com Background Music
 
 Sound Effects Credit: 
-by CreatorsHome via Pixabay 
-by Universfield via Pixabay 
+by CreatorsHome from Pixabay 
+by Universfield from Pixabay 
+by Lumora Studios from Pixabay
