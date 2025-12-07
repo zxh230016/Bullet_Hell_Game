@@ -105,13 +105,13 @@ class Player(pygame.sprite.Sprite):
         self.flash_duration = 10
         self.flash_count = 0
         self.flash_max = 2
-        self.invuln = 0
-        self.invuln_duration = 60 #1s
+        self.iframe = 0
+        self.iframe_duration = 60 #1 second
 
     def update(self):
-        if self.invuln > 0:
-            self.invuln -= 1
-            
+        if self.iframe > 0:
+            self.iframe -= 1
+
         key_pressed = pygame.key.get_pressed()
         if key_pressed[pygame.K_d]:
             self.rect.x += self.speedx
@@ -143,16 +143,19 @@ class Player(pygame.sprite.Sprite):
             self.image.fill((0, 255, 0))
 
         #collision check with enemy bullets
-        if self.invuln == 0:
-            hits = pygame.sprite.spritecollide(self, enemy_bullet, True)
-            if hits:
-                player_hitted_sfx.play()
-                self.flash_timer = self.flash_duration
-                self.health -= 1
-                self.invuln = self.invuln_duration
-
-            if self.health <= 0:
-                game_over_screen()
+        for bullet in enemy_bullet:
+            dx = bullet.rect.centerx - self.hitbox_center()[0]
+            dy = bullet.rect.centery - self.hitbox_center()[1]
+            distance = math.hypot(dx, dy)
+            if distance < self.hitbox_radius():
+                if self.iframe == 0:
+                    player_hitted_sfx.play()
+                    self.flash_timer = self.flash_duration
+                    self.health -= 1
+                    self.iframe = self.iframe_duration
+                    if self.health <= 0:
+                        game_over_screen()
+                bullet.kill()
 
 
     def shoot(self):
@@ -163,6 +166,12 @@ class Player(pygame.sprite.Sprite):
             bullet2 = PlayerBullet(self.rect.centerx + 10, self.rect.top)
             all_sprite.add(bullet1, bullet2)
             player_bullet.add(bullet1, bullet2)
+
+    def hitbox_center(self):
+        return self.rect.center
+
+    def hitbox_radius(self):
+        return 5
 
 class PlayerBullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
