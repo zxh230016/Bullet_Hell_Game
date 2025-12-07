@@ -23,6 +23,8 @@ IMG_DANNMAKU = pygame.image.load("red_bullet.png").convert_alpha()
 IMG_DANNMAKU = pygame.transform.scale(IMG_DANNMAKU, (16, 16))
 IMG_ENEMY_BULLET = pygame.image.load("blue_bullet.png").convert_alpha()
 IMG_ENEMY_BULLET = pygame.transform.scale(IMG_ENEMY_BULLET, (20, 20))
+IMG_PLAYER_BULLET = pygame.image.load("player_bullet.png").convert_alpha()
+IMG_PLAYER_BULLET = pygame.transform.scale(IMG_PLAYER_BULLET, (40, 40))
 
 def start_menu():
     play_music(menu_bgm)  # play menu music
@@ -176,8 +178,7 @@ class Player(pygame.sprite.Sprite):
 class PlayerBullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((6, 15))
-        self.image.fill((255, 0, 0))
+        self.image = IMG_PLAYER_BULLET
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.bottom = y
@@ -285,8 +286,8 @@ class Enemy(pygame.sprite.Sprite):
         self.speed = 3
         self.target_pos = self.get_new_target()
         self.pause_time = 0
-        self.pause_duration = 10000  # 10 seconds
-        self.health = 99
+        self.pause_duration = 8000  # 10 seconds
+        self.health = 199
 
         self.danmaku = Dannmaku(self, enemy_bullet, all_sprite)
 
